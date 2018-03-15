@@ -1,8 +1,7 @@
 {
   "name": "node-rtorrent",
-  "version": "1.0.4",
-  "homepage": "https://github.com/rafi.piccolo/node-rtorrent",
-  "description": "control rtorrent with your nodejs project !",
+  "version": "1.0.5",
+  "description": "rtorrent api implementation for electorrent",
   "main": "index.js",
   "scripts": {
     "test": "test.js"
@@ -12,15 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rafipiccolo/node-rtorrent.git"
+    "url": "https://github.com/tympanix/node-rtorrent.git"
   },
   "bugs": {
-    "url": "https://github.com/rafipiccolo/node-rtorrent/issues"
+    "url": "https://github.com/tympanix/node-rtorrent/issues"
   },
   "dependencies": {
     "xmlrpc": ">=1.3.0"
   },
   "author": "Raphael Piccolo <rafi.piccolo@gmail.com>",
+  "contributors": [
+      "tympanix <tympanix@gmail.com>"
+  ],
   "license": "MIT",
   "keywords": [
     "rtorrent",
