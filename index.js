@@ -171,9 +171,17 @@ Rtorrent.prototype.getTorrentsExtra = function(callback) {
             for (var i = 0; i < nb; i++)
             {
                 var trackerdata = doublearray2hash(data[i][0], Object.keys(fields.trackers));
+
+                for (var t in trackerdata) {
+                    stringsToBooleans(trackerdata[t], ['enabled', 'open'])
+                    stringsToNumbers(trackerdata[t])
+                }
+
                 torrents[i]['trackerdata'] = trackerdata
                 torrents[i]['trackers'] = trackerdata.map(t => t.url)
                 torrents[i]['tracker'] = trackerdata[0] && urlHostname(trackerdata[0]['url'])
+                torrents[i]['leechers_total'] = trackerdata.reduce((s,t) => s+t.scrape_incomplete, 0)
+                torrents[i]['seeders_total'] = trackerdata.reduce((s,t) => s+t.scrape_complete, 0)
             }
 
             var labels = torrents.reduce((s,t) => s.add(t.label), new Set())
@@ -194,27 +202,12 @@ Rtorrent.prototype.getTorrents = function(callback) {
     self.getMulticall('d.multicall', ['main'], fields.torrents, function (err, data) {
         if (err) return callback(err);
 
+        var bools = ['active', 'open', 'complete', 'hashing', 'hashed']
+
         for (var i in data)
         {
-            data[i]['active'] = (data[i]['active'] === "1")
-            data[i]['open'] = (data[i]['open'] === "1")
-            data[i]['complete'] = (data[i]['complete'] === "1")
-            data[i]['hashing'] = (data[i]['hashing'] === "1")
-            data[i]['hashed'] = (data[i]['hashed'] === "1")
-
-            data[i]['chunk_completed'] = parseInt(data[i]['chunk_completed'])
-            data[i]['chunk_size'] = parseInt(data[i]['chunk_size'])
-            data[i]['completed'] = parseInt(data[i]['completed'])
-            data[i]['createdAt'] = parseInt(data[i]['createdAt'])
-            data[i]['down_rate'] = parseInt(data[i]['down_rate'])
-            data[i]['down_total'] = parseInt(data[i]['down_total'])
-            data[i]['free_disk_space'] = parseInt(data[i]['free_disk_space'])
-            data[i]['leechers'] = parseInt(data[i]['leechers'])
-            data[i]['size'] = parseInt(data[i]['size'])
-            data[i]['up_rate'] = parseInt(data[i]['up_rate'])
-            data[i]['up_total'] = parseInt(data[i]['up_total'])
-            data[i]['left_bytes'] = parseInt(data[i]['left_bytes'])
-            data[i]['addtime'] = parseInt(data[i]['addtime'])
+            stringsToBooleans(data[i], bools)
+            stringsToNumbers(data[i])
 
             data[i]['label'] = decodeURIComponent(data[i]['label'] || '')
 
@@ -480,6 +473,23 @@ function postfix(param) {
 function urlHostname(url) {
     var match = url.match(URL_REGEX)
     return match && match[1]
+}
+
+function stringsToNumbers(object) {
+    let keys = Object.keys(object)
+    for (let key of keys) {
+        if (key === 'hash')
+            continue
+        let number = parseFloat(object[key])
+        if (!isNaN(number))
+            object[key] = number
+    }
+}
+
+function stringsToBooleans(object, keys) {
+    for (var key of keys) {
+        object[key] = !!parseInt(object[key])
+    }
 }
 
 function array2hash(array, keys) {
