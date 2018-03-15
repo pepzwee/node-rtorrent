@@ -13,6 +13,7 @@ function Rtorrent(option) {
     this.user = (option && option['user']) || null;
     this.pass = (option && option['pass']) || null;
     this.ssl  = (option && option['ssl'])  || false;
+    this.timeout = (option && option['timeout']) || 5000;
     this.client = null;
 
     if (this.mode == 'xmlrpc')
@@ -27,7 +28,8 @@ function Rtorrent(option) {
                 'Accept': 'text/xml',
                 'Accept-Charset': 'UTF8',
                 'Connection': 'Close'
-            }
+            },
+            timeout: this.timeout,
         }
 
         if (this.user && this.pass) {
