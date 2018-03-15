@@ -3,6 +3,7 @@ var url = require("url")
 var fs = require('fs');
 var xmlrpc = require("xmlrpc");
 
+const URL_REGEX = /^[a-z]+:\/\/(?:[a-z0-9-]+\.)*((?:[a-z0-9-]+\.)[a-z]+)/
 
 function Rtorrent(option) {
     this.mode = (option && option['mode']) || "xmlrpc";
@@ -13,7 +14,7 @@ function Rtorrent(option) {
     this.pass = (option && option['pass']) || null;
     this.ssl  = (option && option['ssl'])  || false;
     this.client = null;
-    
+
     if (this.mode == 'xmlrpc')
     {
         options = {
@@ -62,7 +63,7 @@ Rtorrent.prototype.getMulticall = function(method, param, cmds, callback) {
     var cmdarray = param;
 
     for (var c in cmds)
-        cmdarray.push(cmds[c]+'=');
+        cmdarray.push(postfix(cmds[c]));
 
     self.get(method, cmdarray, function (err, data) {
         if (err) return callback(err);
@@ -71,6 +72,23 @@ Rtorrent.prototype.getMulticall = function(method, param, cmds, callback) {
         callback(err, res);
     });
 };
+
+Rtorrent.prototype.getMulticallHashes = function(hashes, cmds, params, callback) {
+    var array = [];
+
+    for (var h in hashes) {
+        for (var c in cmds) {
+            var param = params[c]
+            param = param === undefined ? [] : [param]
+            array.push({
+                'methodName': cmds[c],
+                'params': [hashes[h], ...param],
+            });
+        }
+    }
+
+    this.getXmlrpc('system.multicall', [array], callback);
+}
 
 Rtorrent.prototype.getAll = function(callback) {
     var self = this;
@@ -130,6 +148,46 @@ Rtorrent.prototype.getAll = function(callback) {
     });
 };
 
+Rtorrent.prototype.getTorrentsExtra = function(callback) {
+    var self = this;
+
+    this.getTorrents(function (err, torrents) {
+        if (err) return callback(err);
+
+        var array = [];
+
+        for (var t in torrents) {
+            var params = [];
+            params.push(torrents[t].hash);
+            params.push('');
+            for (var f in fields.trackers)
+                params.push(fields.trackers[f]+'=');
+            array.push({'methodName': 't.multicall', params: params})
+        }
+
+        self.getXmlrpc('system.multicall', [array], function (err, data) {
+
+            var nb = torrents.length;
+            for (var i = 0; i < nb; i++)
+            {
+                var trackerdata = doublearray2hash(data[i][0], Object.keys(fields.trackers));
+                torrents[i]['trackerdata'] = trackerdata
+                torrents[i]['trackers'] = trackerdata.map(t => t.url)
+                torrents[i]['tracker'] = trackerdata[0] && urlHostname(trackerdata[0]['url'])
+            }
+
+            var labels = torrents.reduce((s,t) => s.add(t.label), new Set())
+            var trackers = torrents.reduce((s,t) => s.add(t.tracker), new Set())
+
+            callback(err, {
+                torrents: torrents,
+                labels: Array.from(labels).filter(l => !!l),
+                trackers: Array.from(trackers).filter(t => !!t),
+            })
+        });
+    });
+}
+
 Rtorrent.prototype.getTorrents = function(callback) {
     var self = this;
 
@@ -138,21 +196,34 @@ Rtorrent.prototype.getTorrents = function(callback) {
 
         for (var i in data)
         {
-            data[i]['state'] = '';
-            if (data[i]['active'] == 1)
-                data[i]['state'] += 'active ';
-            if (data[i]['open'] == 1)
-                data[i]['state'] += 'open ';
-            if (data[i]['complete'] == 1)
-                data[i]['state'] += 'complete ';
-            if (data[i]['hashing'] == 1)
-                data[i]['state'] += 'hashing ';
-            if (data[i]['hashed'] == 1)
-                data[i]['state'] += 'hashed ';
+            data[i]['active'] = (data[i]['active'] === "1")
+            data[i]['open'] = (data[i]['open'] === "1")
+            data[i]['complete'] = (data[i]['complete'] === "1")
+            data[i]['hashing'] = (data[i]['hashing'] === "1")
+            data[i]['hashed'] = (data[i]['hashed'] === "1")
+
+            data[i]['chunk_completed'] = parseInt(data[i]['chunk_completed'])
+            data[i]['chunk_size'] = parseInt(data[i]['chunk_size'])
+            data[i]['completed'] = parseInt(data[i]['completed'])
+            data[i]['createdAt'] = parseInt(data[i]['createdAt'])
+            data[i]['down_rate'] = parseInt(data[i]['down_rate'])
+            data[i]['down_total'] = parseInt(data[i]['down_total'])
+            data[i]['free_disk_space'] = parseInt(data[i]['free_disk_space'])
+            data[i]['leechers'] = parseInt(data[i]['leechers'])
+            data[i]['size'] = parseInt(data[i]['size'])
+            data[i]['up_rate'] = parseInt(data[i]['up_rate'])
+            data[i]['up_total'] = parseInt(data[i]['up_total'])
+            data[i]['left_bytes'] = parseInt(data[i]['left_bytes'])
+            data[i]['addtime'] = parseInt(data[i]['addtime'])
+
+            data[i]['label'] = decodeURIComponent(data[i]['label'] || '')
+
             if (data[i]['down_total'] < data[i]['completed'])
                 data[i]['down_total'] = data[i]['completed'];
+
             data[i]['ratio'] = data[i]['up_total']/data[i]['down_total'];
         }
+
         callback(err, data)
     });
 };
@@ -193,27 +264,59 @@ Rtorrent.prototype.getGlobals = function(callback) {
    this.systemMulticall(fields.global, callback);
 };
 
-Rtorrent.prototype.start = function(hash, callback) {
+Rtorrent.prototype.start = function(hashes, callback) {
     var self = this;
-    this.get('d.open', [hash], function(err, data) {
+    this.getMulticallHashes(hashes, ['d.open'], [], function(err, data) {
         if(err) return callback(err);
 
-        self.get('d.start', [hash], callback);
+        self.getMulticallHashes(hashes, ['d.start'], [], callback)
     })
-};
+}
 
-Rtorrent.prototype.stop = function(hash, callback) {
+Rtorrent.prototype.pause = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.pause'], [], callback)
+}
+
+Rtorrent.prototype.stop = function(hashes, callback) {
     var self = this;
-    this.get('d.stop', [hash], function(err, data) {
+    this.getMulticallHashes(hashes, ['d.stop'], [], function(err, data) {
         if(err) return callback(err);
 
-        self.get('d.close', [hash], callback);
+        self.getMulticallHashes(hashes, ['d.close'], [], callback)
     })
+}
+
+Rtorrent.prototype.remove = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.erase'], [], callback)
 };
 
-Rtorrent.prototype.remove = function(hash, callback) {
-    this.get('d.erase', [hash], callback);
-};
+Rtorrent.prototype.removeAndErase = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.set_custom5', 'd.delete_tied', 'd.erase'], ['1'], callback)
+}
+
+Rtorrent.prototype.setLabel = function(hashes, label, callback) {
+    this.getMulticallHashes(hashes, ['d.set_custom1'], [label], callback)
+}
+
+Rtorrent.prototype.setPriorityHigh = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.set_priority'], [3], callback)
+}
+
+Rtorrent.prototype.setPriorityNormal = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.set_priority'], [2], callback)
+}
+
+Rtorrent.prototype.setPriorityLow = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.set_priority'], [1], callback)
+}
+
+Rtorrent.prototype.setPriorityOff = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.set_priority'], [0], callback)
+}
+
+Rtorrent.prototype.recheck = function(hashes, callback) {
+    this.getMulticallHashes(hashes, ['d.check_hash'], [], callback)
+}
 
 Rtorrent.prototype.loadLink = function(link, callback) {
     this.get('load_start', [link], callback);
@@ -225,17 +328,17 @@ Rtorrent.prototype.loadFile = function(filePath, callback) {
 };
 
 Rtorrent.prototype.loadFileContent = function(filecontent, callback) {
+    if (!Buffer.isBuffer(filecontent)) {
+        filecontent = Buffer.from(filecontent)
+    }
     this.get('load_raw_start', [filecontent], callback);
 };
-
 
 Rtorrent.prototype.setPath = function(hash, directory, callback) {
     this.get('d.set_directory', [hash, directory], callback);
 };
 
 module.exports = Rtorrent;
-
-
 
 
 
@@ -339,7 +442,7 @@ var fields = {
         torrent: 'd.get_tied_to_file',
         torrentsession: 'd.get_loaded_file',
         path: 'd.get_base_path',
-        name: 'd.get_base_filename',
+        name: 'd.get_name',
         size: 'd.get_size_bytes',
         skip: 'd.get_skip_total',
         completed: 'd.get_completed_bytes',
@@ -357,14 +460,27 @@ var fields = {
         complete: 'd.get_complete',
         hashing: 'd.is_hash_checking',
         hashed: 'd.is_hash_checked',
-        message: 'd.get_message',
         leechers: 'd.get_peers_accounted',
         seeders: 'd.get_peers_complete',
         free_disk_space: 'd.free_diskspace',
+        left_bytes: 'd.get_left_bytes',
+        label: 'd.custom1',
+        addtime: 'd.get_custom=addtime',
     },
 };
 
+function postfix(param) {
+    if (param.includes('=')) {
+        return param
+    } else {
+        return param+'='
+    }
+}
 
+function urlHostname(url) {
+    var match = url.match(URL_REGEX)
+    return match && match[1]
+}
 
 function array2hash(array, keys) {
     var i = 0;

@@ -8,7 +8,7 @@
     "test": "test.js"
   },
   "bin": {
-    "filesearch" : "cli.js"
+    "filesearch": "cli.js"
   },
   "repository": {
     "type": "git",
