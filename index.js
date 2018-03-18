@@ -13,6 +13,7 @@ function Rtorrent(option) {
     this.user = (option && option['user']) || null;
     this.pass = (option && option['pass']) || null;
     this.ssl  = (option && option['ssl'])  || false;
+    this.ca   = (option && option['ca'])   || undefined;
     this.timeout = (option && option['timeout']) || 5000;
     this.client = null;
 
@@ -29,6 +30,7 @@ function Rtorrent(option) {
                 'Accept-Charset': 'UTF8',
                 'Connection': 'Close'
             },
+            ca: this.ca,
             timeout: this.timeout,
         }
 
@@ -52,7 +54,7 @@ Rtorrent.prototype.get = function(method, param, callback) {
     return this.getXmlrpc(method, param, callback);
 };
 
-Rtorrent.prototype.getXmlrpc = function(method, params, callback ) {
+Rtorrent.prototype.getXmlrpc = function(method, params, callback) {
     this.client.methodCall(method, params, callback);
 };
 
