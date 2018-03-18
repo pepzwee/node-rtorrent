@@ -1,6 +1,6 @@
 {
   "name": "@electorrent/node-rtorrent",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "rtorrent api implementation for electorrent",
   "main": "index.js",
   "scripts": {
@@ -21,7 +21,7 @@
   },
   "author": "Raphael Piccolo <rafi.piccolo@gmail.com>",
   "contributors": [
-      "tympanix <tympanix@gmail.com>"
+    "tympanix <tympanix@gmail.com>"
   ],
   "license": "MIT",
   "keywords": [
