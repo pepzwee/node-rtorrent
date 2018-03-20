@@ -482,7 +482,7 @@ function urlHostname(url) {
 function stringsToNumbers(object) {
     let keys = Object.keys(object)
     for (let key of keys) {
-        if (key === 'hash')
+        if (key === 'hash' || key === 'name')
             continue
         let number = parseFloat(object[key])
         if (!isNaN(number))
