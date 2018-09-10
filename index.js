@@ -1,7 +1,7 @@
 
 var url = require("url")
 var fs = require('fs');
-var xmlrpc = require("xmlrpc");
+var xmlrpc = require("@electorrent/xmlrpc");
 
 const URL_REGEX = /^[a-z]+:\/\/(?:[a-z0-9-]+\.)*((?:[a-z0-9-]+\.)[a-z]+)/
 
@@ -35,10 +35,8 @@ function Rtorrent(option) {
         }
 
         if (this.user && this.pass) {
-            options.basic_auth = {
-                user: this.user,
-                pass: this.pass
-            }
+            options.username = this.user
+            options.password = this.pass
         }
 
         this.client = (this.ssl) ? xmlrpc.createSecureClient(options) : xmlrpc.createClient(options);
