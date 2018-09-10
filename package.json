@@ -17,8 +17,7 @@
     "url": "https://github.com/tympanix/node-rtorrent/issues"
   },
   "dependencies": {
-    "@electorrent/xmlrpc": "^1.3.2",
-    "xmlrpc": ">=1.3.0"
+    "@electorrent/xmlrpc": "^1.3.2"
   },
   "author": "Raphael Piccolo <rafi.piccolo@gmail.com>",
   "contributors": [
