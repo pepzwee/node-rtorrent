@@ -57,7 +57,7 @@ Rtorrent.prototype.getXmlrpc = function(method, params, callback) {
 };
 
 Rtorrent.prototype.execute = function(cmd, callback) {
-    return this.get('execute_capture', ['bash', '-c', cmd], callback);
+    return this.get('execute.capture', ['bash', '-c', cmd], callback);
 };
 
 Rtorrent.prototype.getMulticall = function(method, param, cmds, callback) {
@@ -201,7 +201,7 @@ Rtorrent.prototype.getTorrentsExtra = function(callback) {
 Rtorrent.prototype.getTorrents = function(callback) {
     var self = this;
 
-    self.getMulticall('d.multicall', ['main'], fields.torrents, function (err, data) {
+    self.getMulticall('d.multicall2', ['', 'main'], fields.torrents, function (err, data) {
         if (err) return callback(err);
 
         var bools = ['active', 'open', 'complete', 'hashing', 'hashed']
@@ -286,27 +286,27 @@ Rtorrent.prototype.remove = function(hashes, callback) {
 };
 
 Rtorrent.prototype.removeAndErase = function(hashes, callback) {
-    this.getMulticallHashes(hashes, ['d.set_custom5', 'd.delete_tied', 'd.erase'], ['1'], callback)
+    this.getMulticallHashes(hashes, ['d.custom5.set', 'd.delete_tied', 'd.erase'], ['1'], callback)
 }
 
 Rtorrent.prototype.setLabel = function(hashes, label, callback) {
-    this.getMulticallHashes(hashes, ['d.set_custom1'], [label], callback)
+    this.getMulticallHashes(hashes, ['d.custom1.set'], [label], callback)
 }
 
 Rtorrent.prototype.setPriorityHigh = function(hashes, callback) {
-    this.getMulticallHashes(hashes, ['d.set_priority'], [3], callback)
+    this.getMulticallHashes(hashes, ['d.priority.set'], [3], callback)
 }
 
 Rtorrent.prototype.setPriorityNormal = function(hashes, callback) {
-    this.getMulticallHashes(hashes, ['d.set_priority'], [2], callback)
+    this.getMulticallHashes(hashes, ['d.priority.set'], [2], callback)
 }
 
 Rtorrent.prototype.setPriorityLow = function(hashes, callback) {
-    this.getMulticallHashes(hashes, ['d.set_priority'], [1], callback)
+    this.getMulticallHashes(hashes, ['d.priority.set'], [1], callback)
 }
 
 Rtorrent.prototype.setPriorityOff = function(hashes, callback) {
-    this.getMulticallHashes(hashes, ['d.set_priority'], [0], callback)
+    this.getMulticallHashes(hashes, ['d.priority.set'], [0], callback)
 }
 
 Rtorrent.prototype.recheck = function(hashes, callback) {
@@ -314,7 +314,7 @@ Rtorrent.prototype.recheck = function(hashes, callback) {
 }
 
 Rtorrent.prototype.loadLink = function(link, callback) {
-    this.get('load_start', [link], callback);
+    this.get('load.start', [link], callback);
 };
 
 Rtorrent.prototype.loadFile = function(filePath, callback) {
@@ -326,11 +326,11 @@ Rtorrent.prototype.loadFileContent = function(filecontent, callback) {
     if (!Buffer.isBuffer(filecontent)) {
         filecontent = Buffer.from(filecontent)
     }
-    this.get('load_raw_start', [filecontent], callback);
+    this.get('load.raw_start', [filecontent], callback);
 };
 
 Rtorrent.prototype.setPath = function(hash, directory, callback) {
-    this.get('d.set_directory', [hash, directory], callback);
+    this.get('d.directory.set', [hash, directory], callback);
 };
 
 module.exports = Rtorrent;
@@ -339,128 +339,128 @@ module.exports = Rtorrent;
 
 var fields = {
     global: {
-        up_rate: 'get_up_rate',
-        down_rate: 'get_down_rate',
-        up_total: 'get_up_total',
-        down_total: 'get_down_total',
-        bind: 'get_bind',
-        check_hash: 'get_check_hash',
-        dht_port: 'get_dht_port',
-        directory: 'get_directory',
-        download_rate: 'get_download_rate',
-        http_cacert: 'get_http_cacert',
-        http_capath: 'get_http_capath',
-        http_proxy: 'get_http_proxy',
-        ip: 'get_ip',
-        max_downloads_div: 'get_max_downloads_div',
-        max_downloads_global: 'get_max_downloads_global',
-        max_file_size: 'get_max_file_size',
-        max_memory_usage: 'get_max_memory_usage',
-        max_open_files: 'get_max_open_files',
-        max_open_http: 'get_max_open_http',
-        max_peers: 'get_max_peers',
-        max_peers_seed: 'get_max_peers_seed',
-        max_uploads: 'get_max_uploads',
-        max_uploads_global: 'get_max_uploads_global',
-        min_peers_seed: 'get_min_peers_seed',
-        min_peers: 'get_min_peers',
-        peer_exchange: 'get_peer_exchange',
-        port_open: 'get_port_open',
-        upload_rate: 'get_upload_rate',
-        port_random: 'get_port_random',
-        port_range: 'get_port_range',
-        preload_min_size: 'get_preload_min_size',
-        preload_required_rate: 'get_preload_required_rate',
-        preload_type: 'get_preload_type',
-        proxy_address: 'get_proxy_address',
-        receive_buffer_size: 'get_receive_buffer_size',
-        safe_sync: 'get_safe_sync',
-        scgi_dont_route: 'get_scgi_dont_route',
-        send_buffer_size: 'get_send_buffer_size',
-        session: 'get_session',
-        session_lock: 'get_session_lock',
-        session_on_completion: 'get_session_on_completion',
-        split_file_size: 'get_split_file_size',
-        split_suffix: 'get_split_suffix',
-        timeout_safe_sync: 'get_timeout_safe_sync',
-        timeout_sync: 'get_timeout_sync',
-        tracker_numwant: 'get_tracker_numwant',
-        use_udp_trackers: 'get_use_udp_trackers',
-        max_uploads_div: 'get_max_uploads_div',
-        max_open_sockets: 'get_max_open_sockets'
+        up_rate: 'throttle.global_up.rate',
+        down_rate: 'throttle.global_down.rate',
+        up_total: 'throttle.global_up.total',
+        down_total: 'throttle.global_down.total',
+        bind: 'network.bind_address',
+        check_hash: 'pieces.hash.on_completion',
+        dht_port: 'dht.port',
+        directory: 'directory.default',
+        download_rate: 'throttle.global_down.max_rate',
+        http_cacert: 'network.http.cacert',
+        http_capath: 'network.http.capath',
+        http_proxy: 'network.http.proxy_address',
+        ip: 'network.local_address',
+        max_downloads_div: 'throttle.max_downloads.div',
+        max_downloads_global: 'throttle.max_downloads.global',
+        max_file_size: 'system.file.max_size',
+        max_memory_usage: 'pieces.memory.max',
+        max_open_files: 'network.max_open_files',
+        max_open_http: 'network.http.max_open',
+        max_peers: 'throttle.max_peers.normal',
+        max_peers_seed: 'throttle.max_peers.seed',
+        max_uploads: 'throttle.max_uploads',
+        max_uploads_global: 'throttle.max_uploads.global',
+        min_peers_seed: 'throttle.min_peers.seed',
+        min_peers: 'throttle.min_peers.normal',
+        peer_exchange: 'protocol.pex',
+        port_open: 'network.port_open',
+        upload_rate: 'throttle.global_up.max_rate',
+        port_random: 'network.port_random',
+        port_range: 'network.port_range',
+        preload_min_size: 'pieces.preload.min_size',
+        preload_required_rate: 'pieces.preload.min_rate',
+        preload_type: 'pieces.preload.type',
+        proxy_address: 'network.proxy_address',
+        receive_buffer_size: 'network.receive_buffer.size',
+        safe_sync: 'pieces.sync.always_safe',
+        scgi_dont_route: 'network.scgi.dont_route',
+        send_buffer_size: 'network.send_buffer.size',
+        session: 'session.path',
+        session_lock: 'session.use_lock',
+        session_on_completion: 'session.on_completion',
+        split_file_size: 'system.file.split_size',
+        split_suffix: 'system.file.split_suffix',
+        timeout_safe_sync: 'pieces.sync.timeout_safe',
+        timeout_sync: 'pieces.sync.timeout',
+        tracker_numwant: 'trackers.numwant',
+        use_udp_trackers: 'trackers.use_udp',
+        max_uploads_div: 'throttle.max_uploads.div',
+        max_open_sockets: 'network.max_open_sockets'
     },
     peers: {
-        address: 'p.get_address',
-        client_version: 'p.get_client_version',
-        completed_percent: 'p.get_completed_percent',
-        down_rate: 'p.get_down_rate',
-        down_total: 'p.get_down_total',
-        id: 'p.get_id',
-        port: 'p.get_port',
-        up_rate: 'p.get_up_rate',
-        up_total: 'p.get_up_total'
+        address: 'p.address',
+        client_version: 'p.client_version',
+        completed_percent: 'p.completed_percent',
+        down_rate: 'p.down_rate',
+        down_total: 'p.down_total',
+        id: 'p.id',
+        port: 'p.port',
+        up_rate: 'p.up_rate',
+        up_total: 'p.up_total'
     },
     files: {
-        range_first: 'f.get_range_first',
-        range_second: 'f.get_range_second',
-        size: 'f.get_size_bytes',
-        chunks: 'f.get_size_chunks',
-        completed_chunks: 'f.get_completed_chunks',
-        fullpath: 'f.get_frozen_path',
-        path: 'f.get_path',
-        priority: 'f.get_priority',
+        range_first: 'f.range_first',
+        range_second: 'f.range_second',
+        size: 'f.size_bytes',
+        chunks: 'f.size_chunks',
+        completed_chunks: 'f.completed_chunks',
+        fullpath: 'f.frozen_path',
+        path: 'f.path',
+        priority: 'f.priority',
         is_created: 'f.is_created=',
         is_open: 'f.is_open=',
-        last_touched: 'f.get_last_touched=',
-        match_depth_next: 'f.get_match_depth_next=',
-        match_depth_prev: 'f.get_match_depth_prev=',
-        offset: 'f.get_offset=',
-        path_components: 'f.get_path_components=',
-        path_depth: 'f.get_path_depth=',
+        last_touched: 'f.last_touched=',
+        match_depth_next: 'f.match_depth_next=',
+        match_depth_prev: 'f.match_depth_prev=',
+        offset: 'f.offset=',
+        path_components: 'f.path_components=',
+        path_depth: 'f.path_depth=',
     },
     trackers: {
-        id: 't.get_id',
-        group: 't.get_group',
-        type: 't.get_type',
-        url: 't.get_url',
+        id: 't.id',
+        group: 't.group',
+        type: 't.type',
+        url: 't.url',
         enabled: 't.is_enabled',
         open: 't.is_open',
-        min_interval: 't.get_min_interval',
-        normal_interval: 't.get_normal_interval',
-        scrape_complete: 't.get_scrape_complete',
-        scrape_downloaded: 't.get_scrape_downloaded',
-        scrape_incomplete: 't.get_scrape_incomplete',
-        scrape_time_last: 't.get_scrape_time_last',
+        min_interval: 't.min_interval',
+        normal_interval: 't.normal_interval',
+        scrape_complete: 't.scrape_complete',
+        scrape_downloaded: 't.scrape_downloaded',
+        scrape_incomplete: 't.scrape_incomplete',
+        scrape_time_last: 't.scrape_time_last',
     },
     torrents: {
-        hash: 'd.get_hash',
-        torrent: 'd.get_tied_to_file',
-        torrentsession: 'd.get_loaded_file',
-        path: 'd.get_base_path',
-        name: 'd.get_name',
-        size: 'd.get_size_bytes',
-        skip: 'd.get_skip_total',
-        completed: 'd.get_completed_bytes',
-        down_rate: 'd.get_down_rate',
-        down_total: 'd.get_down_total',
-        up_rate: 'd.get_up_rate',
-        up_total: 'd.get_up_total',
-        message: 'd.get_message',
-        bitfield: 'd.get_bitfield',
-        chunk_size: 'd.get_chunk_size',
-        chunk_completed: 'd.get_completed_chunks',
+        hash: 'd.hash',
+        torrent: 'd.tied_to_file',
+        torrentsession: 'd.loaded_file',
+        path: 'd.base_path',
+        name: 'd.name',
+        size: 'd.size_bytes',
+        skip: 'd.skip.total',
+        completed: 'd.completed_bytes',
+        down_rate: 'd.down.rate',
+        down_total: 'd.down.total',
+        up_rate: 'd.up.rate',
+        up_total: 'd.up.total',
+        message: 'd.message',
+        bitfield: 'd.bitfield',
+        chunk_size: 'd.chunk_size',
+        chunk_completed: 'd.completed_chunks',
         createdAt: 'd.creation_date',
         active: 'd.is_active',
         open: 'd.is_open',
-        complete: 'd.get_complete',
+        complete: 'd.complete',
         hashing: 'd.is_hash_checking',
         hashed: 'd.is_hash_checked',
-        leechers: 'd.get_peers_accounted',
-        seeders: 'd.get_peers_complete',
+        leechers: 'd.peers_accounted',
+        seeders: 'd.peers_complete',
         free_disk_space: 'd.free_diskspace',
-        left_bytes: 'd.get_left_bytes',
+        left_bytes: 'd.left_bytes',
         label: 'd.custom1',
-        addtime: 'd.get_custom=addtime',
+        addtime: 'd.custom=addtime',
     },
 };
 
