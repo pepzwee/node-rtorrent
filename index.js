@@ -314,7 +314,7 @@ Rtorrent.prototype.recheck = function(hashes, callback) {
 }
 
 Rtorrent.prototype.loadLink = function(link, callback) {
-    this.get('load.start', [link], callback);
+    this.get('load.start', ['', link], callback);
 };
 
 Rtorrent.prototype.loadFile = function(filePath, callback) {
@@ -326,7 +326,7 @@ Rtorrent.prototype.loadFileContent = function(filecontent, callback) {
     if (!Buffer.isBuffer(filecontent)) {
         filecontent = Buffer.from(filecontent)
     }
-    this.get('load.raw_start', [filecontent], callback);
+    this.get('load.raw_start', ['', filecontent], callback);
 };
 
 Rtorrent.prototype.setPath = function(hash, directory, callback) {
