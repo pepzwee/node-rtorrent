@@ -1,6 +1,6 @@
 {
   "name": "@electorrent/node-rtorrent",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "rtorrent api implementation for electorrent",
   "main": "index.js",
   "scripts": {
