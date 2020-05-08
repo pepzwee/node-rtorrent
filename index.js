@@ -135,6 +135,7 @@ Rtorrent.prototype.getAll = function(callback) {
                 var nb = torrents.length;
                 for (var i = 0; i < nb; i++)
                 {
+                    if (!data) break
                     if (data[i])
                         torrents[i]['files'] = doublearray2hash(data[i][0], Object.keys(fields.files));
                     if (data[i+nb])
